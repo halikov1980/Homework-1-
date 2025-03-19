@@ -1,0 +1,80 @@
+using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class NewBehaviourScript : MonoBehaviour
+{
+    public GameObject[] cubes; // Массив кубиков
+    public float moveSpeed = 5f; // Скорость движения
+    public float minDistance = 2f; // Минимальное расстояние между кубиками
+    private Vector3[] initialPositions; // Хранение начальных позиций
+
+    private Vector3[] directions = new Vector3[]
+    {
+        new Vector3(0, 0, 1),  // Вперёд (W)
+        new Vector3(0, 0, -1), // Назад (S)
+        new Vector3(-1, 0, 0), // Влево (A)
+        new Vector3(1, 0, 0)   // Вправо (D)
+    };
+
+    void Start()
+    {
+        // Запоминаем начальные позиции кубиков
+        initialPositions = new Vector3[cubes.Length];
+        for (int i = 0; i < cubes.Length; i++)
+        {
+            initialPositions[i] = cubes[i].transform.position;
+        }
+    }
+
+    void Update()
+    {
+        MoveCubes();
+        MaintainDistance();
+    }
+
+    void MoveCubes()
+    {
+        Vector3 inputDirection = Vector3.zero;
+
+        // Читаем управление
+        if (Input.GetKey(KeyCode.W)) inputDirection += directions[0];
+        if (Input.GetKey(KeyCode.S)) inputDirection += directions[1];
+        if (Input.GetKey(KeyCode.A)) inputDirection += directions[2];
+        if (Input.GetKey(KeyCode.D)) inputDirection += directions[3];
+
+        // Двигаем кубики
+        for (int i = 0; i < cubes.Length; i++)
+        {
+            if (cubes[i] != null)
+            {
+                Vector3 newPosition = cubes[i].transform.position + inputDirection * moveSpeed * Time.deltaTime;
+
+                // Ограничиваем координаты
+                newPosition.x = Mathf.Clamp(newPosition.x, -5f, 5f);
+                newPosition.z = Mathf.Clamp(newPosition.z, -5f, 5f);
+
+                cubes[i].transform.position = newPosition;
+            }
+        }
+    }
+
+    void MaintainDistance()
+    {
+        if (cubes.Length < 2) return;
+
+        // Проверяем текущее расстояние между кубиками
+        float currentDistance = Vector3.Distance(cubes[0].transform.position, cubes[1].transform.position);
+
+        if (currentDistance < minDistance)
+        {
+            // Рассчитываем вектор раздвижения
+            Vector3 direction = (cubes[0].transform.position - cubes[1].transform.position).normalized;
+            float correctionAmount = (minDistance - currentDistance) / 2f;
+
+            // Раздвигаем кубики
+            cubes[0].transform.position += direction * correctionAmount;
+            cubes[1].transform.position -= direction * correctionAmount;
+        }
+    }
+}
